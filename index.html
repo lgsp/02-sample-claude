@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Échantillonnage — Seconde</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<header>
+  <div class="chapter-tag">Seconde · Statistiques &amp; Probabilités · <a href="https://eduscol.education.gouv.fr/sites/default/files/document/spe631annexe1062957pdf-84144.pdf" target="_blank" rel="noopener noreferrer">Programme officiel Éduscol p. 14</a></div>
+  <h1>Échantillonnage</h1>
+  <p>Loi des grands nombres · Fluctuation d'échantillonnage · Estimation d'une probabilité par une fréquence</p>
+</header>
+
+<!-- NAV -->
+<nav>
+  <a href="#modele">Modèle &amp; vocabulaire</a>
+  <a href="#lgn">Loi des grands nombres</a>
+  <a href="#fluctuation">Fluctuation</a>
+  <a href="#intervalle">Intervalle de fluctuation</a>
+  <a href="#estimation">Estimation</a>
+  <a href="#python">Code Python</a>
+  <a href="#qcm">QCM</a>
+  <a href="#contact">Contact</a>
+</nav>
+
+<main>
+
+<!-- ============================================================ 01 MODÈLE & VOCABULAIRE -->
+<section id="modele">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>Modèle et vocabulaire</h2>
+  </div>
+
+  <div class="card highlight">
+    <h3 style="color:var(--gold)">Expérience aléatoire à deux issues</h3>
+    <p>On considère une expérience dont les seules issues possibles sont <strong>Succès</strong> (S) et <strong>Échec</strong> (E). On note \(p = P(\text{Succès})\) la probabilité d'un succès, avec \(0 < p < 1\).</p>
+    <p style="margin-top:0.5rem; opacity:0.85;">Exemples : lancer de pièce (pile ou face), contrôle qualité (conforme ou non), sondage (oui ou non).</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Échantillon aléatoire de taille \(n\)</h3>
+      <p>On répète l'expérience \(n\) fois de façon <strong>indépendante</strong>. On obtient \(n\) résultats : c'est un <strong>échantillon de taille \(n\)</strong>.</p>
+      <p style="margin-top:0.5rem;">On note \(k\) le nombre de succès dans l'échantillon.</p>
+      <p style="margin-top:0.5rem;">La <strong>fréquence observée</strong> de succès est \(f = \dfrac{k}{n}\).</p>
+    </div>
+    <div class="card">
+      <h3>Deux grandeurs à distinguer</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Grandeur</th><th>Nature</th><th>Valeur</th></tr></thead>
+          <tbody>
+            <tr><td>\(p\)</td><td>Probabilité théorique</td><td>Fixe, inconnue ou supposée</td></tr>
+            <tr><td>\(f = k/n\)</td><td>Fréquence observée</td><td>Variable, dépend de l'échantillon</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:0.5rem; font-size:0.85rem; color:var(--rust);">⚠ \(f\) est aléatoire : deux échantillons de même taille donnent en général des fréquences différentes.</p>
+    </div>
+  </div>
+
+  <!-- Simulateur de base -->
+  <div class="numberline-wrap">
+    <h3>Simulateur — Un échantillon</h3>
+    <p style="font-size:0.88rem; color:#666; margin-bottom:0.75rem;">Observez comment la fréquence \(f\) varie d'un échantillon à l'autre, pour une même probabilité \(p\).</p>
+    <div class="controls" style="flex-wrap:wrap; gap:0.75rem;">
+      <div class="ctrl-group">
+        <label>Probabilité \(p\) =</label>
+        <input type="range" id="sim1-p" min="0.05" max="0.95" step="0.05" value="0.5"
+               oninput="document.getElementById('sim1-p-v').textContent=parseFloat(this.value).toFixed(2)">
+        <span id="sim1-p-v" style="font-family:'DM Mono',monospace;font-size:0.85rem;min-width:2.5rem;">0.50</span>
+      </div>
+      <div class="ctrl-group">
+        <label>Taille \(n\) =</label>
+        <select id="sim1-n">
+          <option value="10">10</option>
+          <option value="30">30</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="runOneSample()">Tirer un échantillon</button>
+      <button class="btn" onclick="runManySamples()">Tirer 20 fois</button>
+    </div>
+    <canvas id="sampleCanvas" height="180" style="margin-top:0.75rem;"></canvas>
+    <div id="sim1-result" class="result-box" style="margin-top:0.75rem; min-height:2rem; line-height:1.7;"></div>
+  </div>
+</section>
+
+<!-- ============================================================ 02 LOI DES GRANDS NOMBRES -->
+<section id="lgn">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>Loi des grands nombres</h2>
+  </div>
+
+  <div class="card highlight">
+    <h3 style="color:var(--gold)">Version vulgarisée — au programme</h3>
+    <p style="font-size:1.02rem;">« Lorsque \(n\) est grand, <strong>sauf exception</strong>, la fréquence observée \(f\) est proche de la probabilité \(p\). »</p>
+    <p style="margin-top:0.6rem; font-size:0.9rem; opacity:0.85;">Plus précisément : quand \(n \to +\infty\), la fréquence \(f\) <strong>converge en probabilité</strong> vers \(p\).</p>
+  </div>
+
+  <div class="card">
+    <h3>Ce que dit réellement la loi des grands nombres</h3>
+    <ul>
+      <li>Pour <em>un</em> tirage, \(f\) peut s'éloigner de \(p\), même avec un grand \(n\) (cas exceptionnel mais possible).</li>
+      <li>Plus \(n\) est grand, plus la probabilité que \(|f - p|\) soit grand devient faible.</li>
+      <li>C'est une <strong>limite en probabilité</strong>, pas une certitude.</li>
+    </ul>
+    <div style="margin-top:0.75rem; padding:0.6rem 1rem; background:#f5f0e8; border-left:3px solid var(--gold); border-radius:0 2px 2px 0; font-size:0.88rem;">
+      ⚠ La loi des grands nombres ne dit <em>pas</em> qu'après une série de Pile, Face est « dû ». Chaque tirage est indépendant.
+    </div>
+  </div>
+
+  <!-- Visualisation convergence -->
+  <div class="numberline-wrap">
+    <h3>Visualisation — Convergence de \(f\) vers \(p\) quand \(n\) croît</h3>
+    <p style="font-size:0.88rem; color:#666; margin-bottom:0.75rem;">La courbe montre l'évolution de la fréquence cumulée au fil des tirages. Elle doit se rapprocher de \(p\) (ligne pointillée).</p>
+    <div class="controls" style="flex-wrap:wrap; gap:0.75rem;">
+      <div class="ctrl-group">
+        <label>Probabilité \(p\) =</label>
+        <input type="range" id="lgn-p" min="0.05" max="0.95" step="0.05" value="0.3"
+               oninput="document.getElementById('lgn-p-v').textContent=parseFloat(this.value).toFixed(2)">
+        <span id="lgn-p-v" style="font-family:'DM Mono',monospace;font-size:0.85rem;min-width:2.5rem;">0.30</span>
+      </div>
+      <div class="ctrl-group">
+        <label>Nombre de tirages</label>
+        <select id="lgn-n">
+          <option value="100">100</option>
+          <option value="300" selected>300</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="runLGN()">Simuler</button>
+      <button class="btn" onclick="runLGN()">↺ Nouvelle simulation</button>
+    </div>
+    <canvas id="lgnCanvas" height="300" style="margin-top:0.75rem;"></canvas>
+    <div id="lgn-result" class="result-box" style="margin-top:0.75rem; line-height:1.7;"></div>
+  </div>
+</section>
+
+<!-- ============================================================ 03 FLUCTUATION D'ÉCHANTILLONNAGE -->
+<section id="fluctuation">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>Fluctuation d'échantillonnage</h2>
+  </div>
+
+  <div class="card">
+    <h3>Définition</h3>
+    <p>La <strong>fluctuation d'échantillonnage</strong> est la variation naturelle des fréquences observées d'un échantillon à l'autre, pour une même probabilité \(p\) et une même taille \(n\).</p>
+    <p style="margin-top:0.5rem; font-size:0.85rem;">C'est un phénomène inévitable : même si \(p\) est fixé, deux échantillons de taille \(n\) donneront presque toujours des fréquences différentes.</p>
+  </div>
+
+  <!-- Simulateur N échantillons -->
+  <div class="numberline-wrap">
+    <h3>Simulateur — \(N\) échantillons de taille \(n\)</h3>
+    <p style="font-size:0.88rem; color:#666; margin-bottom:0.75rem;">
+      Chaque barre représente la fréquence obtenue dans un échantillon. Observez la dispersion autour de \(p\).
+    </p>
+    <div class="controls" style="flex-wrap:wrap; gap:0.75rem;">
+      <div class="ctrl-group">
+        <label>Probabilité \(p\) =</label>
+        <input type="range" id="fluct-p" min="0.05" max="0.95" step="0.05" value="0.5"
+               oninput="document.getElementById('fluct-p-v').textContent=parseFloat(this.value).toFixed(2)">
+        <span id="fluct-p-v" style="font-family:'DM Mono',monospace;font-size:0.85rem;min-width:2.5rem;">0.50</span>
+      </div>
+      <div class="ctrl-group">
+        <label>Taille \(n\) =</label>
+        <select id="fluct-n">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="400">400</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Nb échantillons \(N\) =</label>
+        <select id="fluct-N">
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="200">200</option>
+          <option value="500">500</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="runFluctuation()">Simuler</button>
+    </div>
+    <canvas id="fluctCanvas" height="320" style="margin-top:0.75rem;"></canvas>
+    <div id="fluct-result" class="result-box" style="margin-top:0.75rem; line-height:1.8;"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Effet de la taille \(n\)</h3>
+      <p>Plus \(n\) est grand, plus les fréquences sont <strong>concentrées autour de \(p\)</strong>.</p>
+      <p style="margin-top:0.5rem; font-size:0.85rem;">La dispersion est de l'ordre de \(\dfrac{1}{\sqrt{n}}\) : doubler \(n\) divise environ la dispersion par \(\sqrt{2}\).</p>
+    </div>
+    <div class="card">
+      <h3>Effet de \(p\)</h3>
+      <p>La fluctuation est maximale pour \(p = 0{,}5\) et minimale quand \(p\) est proche de 0 ou de 1.</p>
+      <p style="margin-top:0.5rem; font-size:0.85rem;">L'écart-type de \(f\) est \(\sigma_f = \sqrt{\dfrac{p(1-p)}{n}}\).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 04 INTERVALLE DE FLUCTUATION -->
+<section id="intervalle">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>Intervalle de fluctuation au seuil 95 %</h2>
+  </div>
+
+  <div class="card highlight">
+    <h3 style="color:var(--gold)">Principe — au programme</h3>
+    <p>On simule \(N\) échantillons de taille \(n\). On calcule la proportion des échantillons pour lesquels :</p>
+    <p style="margin-top:0.5rem; font-size:1.05rem; text-align:center;">\[\left|f - p\right| \leqslant \frac{1}{\sqrt{n}}\]</p>
+    <p style="margin-top:0.5rem; opacity:0.85;">Cette proportion est <strong>proche de 0,95</strong> (95 %) pour \(n\) grand, et \(p\) pas trop proche de 0 ou 1.</p>
+  </div>
+
+  <div class="card">
+    <h3>Intervalle de fluctuation au seuil 95 %</h3>
+    <p>Si \(p\) est la probabilité théorique, l'intervalle de fluctuation est :</p>
+    <p style="margin-top:0.5rem; font-size:1.05rem; text-align:center;">\[I_f = \left[p - \frac{1}{\sqrt{n}}\,;\; p + \frac{1}{\sqrt{n}}\right]\]</p>
+    <p style="margin-top:0.5rem;">La fréquence observée \(f\) appartient à \(I_f\) dans environ <strong>95 % des échantillons</strong> de taille \(n\).</p>
+    <p style="margin-top:0.5rem; font-size:0.85rem; color:var(--slate);">Formule approchée valable pour \(n \geqslant 30\) et \(p\) pas trop extrême. La formule exacte utilise \(1{,}96\sqrt{p(1-p)/n}\).</p>
+  </div>
+
+  <!-- Simulateur intervalle de fluctuation -->
+  <div class="numberline-wrap">
+    <h3>Simulation — Proportion d'échantillons dans l'intervalle \(\left|f-p\right| \leqslant \dfrac{1}{\sqrt{n}}\)</h3>
+    <div class="controls" style="flex-wrap:wrap; gap:0.75rem;">
+      <div class="ctrl-group">
+        <label>Probabilité \(p\) =</label>
+        <input type="range" id="if-p" min="0.1" max="0.9" step="0.05" value="0.5"
+               oninput="document.getElementById('if-p-v').textContent=parseFloat(this.value).toFixed(2)">
+        <span id="if-p-v" style="font-family:'DM Mono',monospace;font-size:0.85rem;min-width:2.5rem;">0.50</span>
+      </div>
+      <div class="ctrl-group">
+        <label>Taille \(n\) =</label>
+        <select id="if-n">
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="200">200</option>
+          <option value="400">400</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>\(N\) échantillons =</label>
+        <select id="if-N">
+          <option value="200">200</option>
+          <option value="500" selected>500</option>
+          <option value="1000">1000</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="runIntervalSim()">Simuler</button>
+    </div>
+    <canvas id="ifCanvas" height="340" style="margin-top:0.75rem;"></canvas>
+    <div id="if-result" class="result-box" style="margin-top:0.75rem; line-height:1.8;"></div>
+  </div>
+
+  <!-- Calculateur d'intervalle -->
+  <div class="numberline-wrap" style="margin-top:1.25rem;">
+    <h3>Calculateur — Intervalle de fluctuation</h3>
+    <div class="controls" style="flex-wrap:wrap; gap:0.75rem;">
+      <div class="ctrl-group">
+        <label>Probabilité \(p\) =</label>
+        <input type="number" id="calc-p" value="0.4" min="0.01" max="0.99" step="0.01" style="width:70px;">
+      </div>
+      <div class="ctrl-group">
+        <label>Taille \(n\) =</label>
+        <input type="number" id="calc-n" value="100" min="1" step="1" style="width:80px;">
+      </div>
+      <button class="btn btn-primary" onclick="calcInterval()">Calculer</button>
+    </div>
+    <div id="calc-result" class="result-box" style="margin-top:0.75rem; min-height:2.5rem; line-height:1.8;"></div>
+  </div>
+</section>
+
+<!-- ============================================================ 05 ESTIMATION -->
+<section id="estimation">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Estimer une probabilité</h2>
+  </div>
+
+  <div class="card highlight">
+    <h3 style="color:var(--gold)">Principe de l'estimation</h3>
+    <p>Quand la probabilité \(p\) est <strong>inconnue</strong>, on peut l'estimer à partir d'un échantillon :</p>
+    <p style="margin-top:0.5rem; font-size:1.02rem; text-align:center;">\[\hat{p} = f = \frac{k}{n}\]</p>
+    <p style="margin-top:0.5rem; opacity:0.85;">La fréquence observée \(f\) est un <strong>estimateur</strong> de \(p\). Cet estimateur est d'autant plus précis que \(n\) est grand.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Intervalle de confiance à 95 %</h3>
+      <p>Quand \(p\) est inconnu, on construit un intervalle de confiance à 95 % à partir de \(f\) :</p>
+      <p style="margin-top:0.5rem;">\[IC_{95\%} = \left[f - \frac{1}{\sqrt{n}}\,;\; f + \frac{1}{\sqrt{n}}\right]\]</p>
+      <p style="margin-top:0.5rem; font-size:0.85rem; color:var(--slate);">Interprétation : si l'on répète l'expérience, environ 95 % des intervalles construits ainsi contiennent la vraie valeur de \(p\).</p>
+    </div>
+    <div class="card">
+      <h3>Précision de l'estimation</h3>
+      <p>La <strong>marge d'erreur</strong> est \(\dfrac{1}{\sqrt{n}}\).</p>
+      <div style="overflow-x:auto; margin-top:0.5rem;">
+        <table>
+          <thead><tr><th>\(n\)</th><th>Marge \(1/\sqrt{n}\)</th></tr></thead>
+          <tbody>
+            <tr><td>25</td><td>0,200 (±20 %)</td></tr>
+            <tr><td>100</td><td>0,100 (±10 %)</td></tr>
+            <tr><td>400</td><td>0,050 (±5 %)</td></tr>
+            <tr><td>1 000</td><td>0,032 (±3,2 %)</td></tr>
+            <tr><td>10 000</td><td>0,010 (±1 %)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulateur estimation -->
+  <div class="numberline-wrap">
+    <h3>Visualisation — Intervalles de confiance sur \(N\) répétitions</h3>
+    <p style="font-size:0.88rem; color:#666; margin-bottom:0.75rem;">
+      Chaque ligne est un intervalle \([f - 1/\sqrt{n}\,;\,f + 1/\sqrt{n}]\) construit depuis un échantillon. Les intervalles en rouge ne contiennent pas \(p\).
+    </p>
+    <div class="controls" style="flex-wrap:wrap; gap:0.75rem;">
+      <div class="ctrl-group">
+        <label>Vraie valeur \(p\) =</label>
+        <input type="range" id="est-p" min="0.1" max="0.9" step="0.05" value="0.4"
+               oninput="document.getElementById('est-p-v').textContent=parseFloat(this.value).toFixed(2)">
+        <span id="est-p-v" style="font-family:'DM Mono',monospace;font-size:0.85rem;min-width:2.5rem;">0.40</span>
+      </div>
+      <div class="ctrl-group">
+        <label>Taille \(n\) =</label>
+        <select id="est-n">
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="200">200</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Répétitions =</label>
+        <select id="est-N">
+          <option value="30">30</option>
+          <option value="50" selected>50</option>
+          <option value="80">80</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="runConfidenceIntervals()">Simuler</button>
+    </div>
+    <canvas id="estCanvas" height="420" style="margin-top:0.75rem;"></canvas>
+    <div id="est-result" class="result-box" style="margin-top:0.75rem; line-height:1.8;"></div>
+  </div>
+</section>
+
+<!-- ============================================================ 06 CODE PYTHON -->
+<section id="python">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Code Python — éditeur interactif</h2>
+  </div>
+
+  <!-- Statut Pyodide -->
+  <div class="py-status-bar" id="py-status-bar">
+    <span class="py-dot loading" id="py-dot"></span>
+    <span id="py-status-text">Python non encore chargé — il démarrera automatiquement à l'arrivée sur cette section.</span>
+  </div>
+
+  <div class="card" style="margin-bottom:0;">
+    <p style="font-size:0.88rem; color:var(--muted);">Les trois programmes ci-dessous sont ceux du <a href="https://eduscol.education.gouv.fr/sites/default/files/document/spe631annexe1062957pdf-84144.pdf" target="_blank" rel="noopener noreferrer">programme officiel</a>. <strong>Modifie-les librement</strong>, exécute-les dans le navigateur (via Pyodide) et télécharge-les en <code>.py</code>.</p>
+  </div>
+
+  <!-- ── BLOC 1 : nb_succes ── -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="editor-block">
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-badge">01</span>
+          <span class="editor-title">Nombre de succès dans un échantillon</span>
+          <span class="editor-tag"><a href="https://eduscol.education.gouv.fr/sites/default/files/document/spe631annexe1062957pdf-84144.pdf" target="_blank" rel="noopener noreferrer">Programme officiel</a></span>
+        </div>
+        <div class="editor-btns">
+          <button class="ebtn ebtn-run" onclick="runPython('succes')">▶ Exécuter</button>
+          <button class="ebtn ebtn-dl"  onclick="downloadPy('succes')">⬇ .py</button>
+        </div>
+      </div>
+      <div class="editor-desc">
+        Renvoie le nombre de succès \(k\) dans un échantillon de taille \(n\), chaque tirage ayant une probabilité \(p\) de succès.
+        Modifiez les paramètres et observez la fluctuation.
+      </div>
+      <textarea class="py-editor" id="code-succes" spellcheck="false">from random import random
+
+def nb_succes(n, p):
+    """Renvoie le nombre de succès dans un échantillon de taille n,
+    chaque tirage ayant une probabilité p de succès."""
+    compteur = 0
+    for _ in range(n):
+        if random() < p:      # random() renvoie un réel dans [0, 1[
+            compteur += 1
+    return compteur
+
+# ── Exemple 1 : un seul échantillon ──────────────────────────
+n, p = 100, 0.3
+k = nb_succes(n, p)
+f = k / n
+print(f"Échantillon : n={n}, p={p}")
+print(f"  Succès k = {k}")
+print(f"  Fréquence f = {k}/{n} = {f:.4f}")
+print(f"  Écart |f - p| = {abs(f - p):.4f}")
+print()
+
+# ── Exemple 2 : 5 répétitions pour voir la fluctuation ───────
+print("Fluctuation sur 5 répétitions :")
+for i in range(5):
+    k = nb_succes(n, p)
+    print(f"  Tirage {i+1} : k={k:3d}, f={k/n:.3f}")</textarea>
+      <div class="py-output" id="out-succes">
+        <span class="py-placeholder">Cliquez sur ▶ Exécuter pour lancer le code.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BLOC 2 : loi_grands_nombres ── -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="editor-block">
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-badge">02</span>
+          <span class="editor-title">Loi des grands nombres</span>
+          <span class="editor-tag"><a href="https://eduscol.education.gouv.fr/sites/default/files/document/spe631annexe1062957pdf-84144.pdf" target="_blank" rel="noopener noreferrer">Programme officiel</a></span>
+        </div>
+        <div class="editor-btns">
+          <button class="ebtn ebtn-run" onclick="runPython('lgn')">▶ Exécuter</button>
+          <button class="ebtn ebtn-dl"  onclick="downloadPy('lgn')">⬇ .py</button>
+        </div>
+      </div>
+      <div class="editor-desc">
+        Observe comment la fréquence \(f\) converge vers \(p\) quand \(n\) grandit.
+        La fonction <code>frequence_succes</code> est à lire et comprendre (<a href="https://eduscol.education.gouv.fr/sites/default/files/document/spe631annexe1062957pdf-84144.pdf" target="_blank" rel="noopener noreferrer">programme officiel</a>).
+      </div>
+      <textarea class="py-editor" id="code-lgn" spellcheck="false">from random import random
+
+def nb_succes(n, p):
+    compteur = 0
+    for _ in range(n):
+        if random() < p:
+            compteur += 1
+    return compteur
+
+def frequence_succes(n, p):
+    """Renvoie la fréquence de succès dans un échantillon de taille n."""
+    return nb_succes(n, p) / n
+
+# ── Loi des grands nombres ────────────────────────────────────
+p = 0.3
+print(f"Probabilité théorique p = {p}")
+print(f"{'n':>8}  {'f observée':>12}  {'|f - p|':>10}")
+print("-" * 38)
+for n in [10, 50, 100, 500, 1000, 5000, 10000]:
+    f = frequence_succes(n, p)
+    print(f"{n:>8}  {f:>12.5f}  {abs(f-p):>10.5f}")
+
+print()
+print("→ Plus n est grand, plus f est proche de p (en général).")</textarea>
+      <div class="py-output" id="out-lgn">
+        <span class="py-placeholder">Cliquez sur ▶ Exécuter pour lancer le code.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BLOC 3 : proportion_dans_intervalle ── -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="editor-block">
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-badge">03</span>
+          <span class="editor-title">Proportion d'échantillons dans l'intervalle \(|f-p|\leqslant 1/\sqrt{n}\)</span>
+          <span class="editor-tag"><a href="https://eduscol.education.gouv.fr/sites/default/files/document/spe631annexe1062957pdf-84144.pdf" target="_blank" rel="noopener noreferrer">Programme officiel</a></span>
+        </div>
+        <div class="editor-btns">
+          <button class="ebtn ebtn-run" onclick="runPython('intervalle')">▶ Exécuter</button>
+          <button class="ebtn ebtn-dl"  onclick="downloadPy('intervalle')">⬇ .py</button>
+        </div>
+      </div>
+      <div class="editor-desc">
+        Simule \(N\) échantillons de taille \(n\) et calcule la proportion pour laquelle \(|f-p|\leqslant 1/\sqrt{n}\).
+        Doit converger vers <strong>95 %</strong>.
+      </div>
+      <textarea class="py-editor" id="code-intervalle" spellcheck="false">from random import random
+import math
+
+def nb_succes(n, p):
+    compteur = 0
+    for _ in range(n):
+        if random() < p:
+            compteur += 1
+    return compteur
+
+def frequence_succes(n, p):
+    return nb_succes(n, p) / n
+
+def proportion_dans_intervalle(N, n, p):
+    """Simule N échantillons de taille n.
+    Renvoie la proportion pour laquelle |f - p| <= 1/sqrt(n)."""
+    marge = 1 / math.sqrt(n)
+    compteur = 0
+    for _ in range(N):
+        f = frequence_succes(n, p)
+        if abs(f - p) <= marge:
+            compteur += 1
+    return compteur / N
+
+# ── Vérification pour différentes valeurs de n ───────────────
+p = 0.4
+N = 500   # nombre d'échantillons simulés
+print(f"p = {p},  N = {N} échantillons simulés")
+print(f"{'n':>6}  {'marge 1/√n':>12}  {'proportion':>12}  {'≈95 % ?':>10}")
+print("-" * 48)
+for n in [25, 50, 100, 200, 400]:
+    prop = proportion_dans_intervalle(N, n, p)
+    marge = 1 / math.sqrt(n)
+    ok = "✓" if abs(prop - 0.95) < 0.08 else "⚠"
+    print(f"{n:>6}  {marge:>12.4f}  {prop:>12.3f}  {ok:>10}")</textarea>
+      <div class="py-output" id="out-intervalle">
+        <span class="py-placeholder">Cliquez sur ▶ Exécuter pour lancer le code.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BLOC 4 : sondage (bonus) ── -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="editor-block">
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-badge">04</span>
+          <span class="editor-title">Application — Simuler un sondage</span>
+          <span class="editor-tag">Bonus · modifiable</span>
+        </div>
+        <div class="editor-btns">
+          <button class="ebtn ebtn-run" onclick="runPython('sondage')">▶ Exécuter</button>
+          <button class="ebtn ebtn-dl"  onclick="downloadPy('sondage')">⬇ .py</button>
+        </div>
+      </div>
+      <div class="editor-desc">
+        Application concrète : simulation d'un sondage électoral. La vraie proportion est \(p\), on interroge \(n\) personnes et on construit l'intervalle de confiance à 95 %.
+        <strong>Essaie de changer p et n.</strong>
+      </div>
+      <textarea class="py-editor" id="code-sondage" spellcheck="false">from random import random
+import math
+
+def sondage(p_vrai, n):
+    """Simule un sondage de taille n, p_vrai = vraie proportion."""
+    k = sum(1 for _ in range(n) if random() < p_vrai)
+    f = k / n
+    marge = 1 / math.sqrt(n)
+    ic_bas  = max(0, f - marge)
+    ic_haut = min(1, f + marge)
+    return f, ic_bas, ic_haut
+
+# ── Paramètres du sondage ──────────────────────────────────────
+p_vrai = 0.52   # vraie proportion (inconnue en pratique !)
+n      = 1000   # taille de l'échantillon
+
+print(f"Sondage simulé — vraie proportion p = {p_vrai}")
+print(f"Taille de l'échantillon : n = {n}")
+print(f"Marge d'erreur : 1/√{n} = {1/math.sqrt(n):.4f} ({1/math.sqrt(n)*100:.1f} %)")
+print()
+
+# ── 10 sondages successifs ────────────────────────────────────
+print(f"{'Sondage':>9}  {'f observée':>12}  {'IC à 95 %':>22}  {'Contient p ?':>14}")
+print("-" * 65)
+contient = 0
+for i in range(1, 11):
+    f, lo, hi = sondage(p_vrai, n)
+    ok = lo <= p_vrai <= hi
+    if ok: contient += 1
+    signe = "✓" if ok else "✗"
+    print(f"{i:>9}  {f:>12.4f}  [{lo:.4f} ; {hi:.4f}]  {signe:>14}")
+print()
+print(f"→ {contient}/10 intervalles contiennent la vraie valeur p = {p_vrai}")</textarea>
+      <div class="py-output" id="out-sondage">
+        <span class="py-placeholder">Cliquez sur ▶ Exécuter pour lancer le code.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BLOC 5 : bac libre ── -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="editor-block">
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-badge">✎</span>
+          <span class="editor-title">Éditeur libre — expérimente</span>
+          <span class="editor-tag">Bac à sable</span>
+        </div>
+        <div class="editor-btns">
+          <button class="ebtn ebtn-run" onclick="runPython('libre')">▶ Exécuter</button>
+          <button class="ebtn ebtn-dl"  onclick="downloadPy('libre')">⬇ .py</button>
+          <button class="ebtn" onclick="resetLibre()" title="Remettre le code initial">↺</button>
+        </div>
+      </div>
+      <div class="editor-desc">
+        Zone libre : écris ton propre code, teste des idées, adapte les fonctions ci-dessus. Tout Python standard est disponible (math, random, statistics…).
+      </div>
+      <textarea class="py-editor" id="code-libre" spellcheck="false"># ── Zone libre — écris ton code ici ───────────────────────────
+from random import random
+import math, statistics
+
+def nb_succes(n, p):
+    return sum(1 for _ in range(n) if random() < p)
+
+# Idée : comparer l'écart-type théorique sqrt(p(1-p)/n)
+# avec l'écart-type observé sur N échantillons
+p, n, N = 0.4, 100, 200
+
+frequences = [nb_succes(n, p) / n for _ in range(N)]
+sigma_obs  = statistics.stdev(frequences)
+sigma_theo = math.sqrt(p * (1 - p) / n)
+
+print(f"p={p}, n={n}, N={N} échantillons")
+print(f"Écart-type observé  σ_obs  = {sigma_obs:.5f}")
+print(f"Écart-type théorique σ_theo = {sigma_theo:.5f}")
+print(f"Rapport : {sigma_obs/sigma_theo:.3f}  (devrait être ≈ 1)")</textarea>
+      <div class="py-output" id="out-libre">
+        <span class="py-placeholder">Cliquez sur ▶ Exécuter pour lancer le code.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions de lecture -->
+  <div class="grid2">
+    <div class="card">
+      <h3>Questions de lecture de code</h3>
+      <ul>
+        <li>Que renvoie <code>nb_succes(50, 0.6)</code> ? Est-ce toujours la même valeur ?</li>
+        <li>Pourquoi <code>random() &lt; p</code> plutôt que <code>random() == p</code> ?</li>
+        <li>Que se passe-t-il si on appelle <code>frequence_succes(100, 0.4)</code> deux fois ?</li>
+        <li>Pourquoi la proportion dans l'intervalle converge-t-elle vers 0,95 ?</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Réponses</h3>
+      <ul>
+        <li>Un entier entre 0 et 50 (≈ 30 en moyenne) — <strong>différent à chaque appel</strong>.</li>
+        <li><code>random()</code> renvoie un réel continu : l'égalité exacte aurait probabilité nulle.</li>
+        <li>Deux résultats différents : c'est la <strong>fluctuation d'échantillonnage</strong>.</li>
+        <li>L'intervalle est précisément construit pour couvrir 95 % des cas.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 07 QCM -->
+<section id="qcm">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>QCM interactif</h2>
+  </div>
+
+  <div id="chrono-bar" class="chrono-bar hidden">
+    <span>⏱</span>
+    <span class="chrono-display" id="chrono-display">00:00</span>
+    <button class="chrono-btn" id="chrono-pause-btn" onclick="toggleChrono()">Pause</button>
+    <button class="chrono-btn" onclick="resetChrono()">↺ Remise à zéro</button>
+  </div>
+
+  <div class="qcm-header">
+    <div class="qcm-score" id="qcm-score">0 / 0</div>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button class="btn" id="chrono-toggle-btn" onclick="toggleChronoVisibility()">⏱ Afficher chronomètre</button>
+      <button class="btn btn-primary" onclick="generateQCM()">Nouveau QCM ↻</button>
+    </div>
+  </div>
+  <div id="qcm-container"></div>
+</section>
+
+</main>
+
+<!-- ============================================================ 08 CONTACT -->
+<section id="contact" style="max-width:860px; margin:4rem auto 0; padding:0 1.5rem 5rem; scroll-margin-top:2rem;">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>Prendre rendez-vous</h2>
+  </div>
+
+  <div class="grid2" style="gap:1.25rem; margin-bottom:1.25rem;">
+
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfiOvJG1wicFQY8EQufqy5YxGgTPSFPxdyb-OAtk95SUGxWFA/viewform"
+       target="_blank" rel="noopener" style="text-decoration:none; display:block;">
+      <div class="card" style="height:100%; border-left:3px solid var(--slate); cursor:pointer; transition:box-shadow 0.2s, transform 0.2s;"
+           onmouseover="this.style.boxShadow='0 4px 16px rgba(61,90,128,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="font-size:1.5rem; margin-bottom:0.6rem;">📋</div>
+        <h3>Formulaire de retour</h3>
+        <p style="color:#666; font-size:0.86rem; margin-bottom:1rem;">Avis, erreur signalée ou question.</p>
+        <div style="text-align:center; margin:0.5rem 0 0.75rem;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=3d5a80&bgcolor=faf7f2&data=https%3A%2F%2Fdocs.google.com%2Fforms%2Fd%2Fe%2F1FAIpQLSfiOvJG1wicFQY8EQufqy5YxGgTPSFPxdyb-OAtk95SUGxWFA%2Fviewform"
+               alt="QR Formulaire" style="border-radius:2px; border:1px solid var(--mist);">
+        </div>
+        <div style="font-family:'DM Mono',monospace; font-size:0.74rem; color:var(--slate); letter-spacing:0.06em;">Google Forms ↗</div>
+      </div>
+    </a>
+
+    <a href="https://calendly.com/didaskalosmanthanon/30min"
+       target="_blank" rel="noopener" style="text-decoration:none; display:block;">
+      <div class="card" style="height:100%; border-left:3px solid var(--sage); cursor:pointer; transition:box-shadow 0.2s, transform 0.2s;"
+           onmouseover="this.style.boxShadow='0 4px 16px rgba(74,124,89,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="font-size:1.5rem; margin-bottom:0.6rem;">🎓</div>
+        <h3>Élèves — 30 min</h3>
+        <p style="color:#666; font-size:0.86rem; margin-bottom:1rem;">Créneau individuel de soutien.</p>
+        <div style="text-align:center; margin:0.5rem 0 0.75rem;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=4a7c59&bgcolor=faf7f2&data=https%3A%2F%2Fcalendly.com%2Fdidaskalosmanthanon%2F30min"
+               alt="QR Élèves" style="border-radius:2px; border:1px solid var(--mist);">
+        </div>
+        <div style="font-family:'DM Mono',monospace; font-size:0.74rem; color:var(--sage); letter-spacing:0.06em;">Calendly ↗</div>
+      </div>
+    </a>
+
+    <a href="https://calendly.com/didaskalosmanthanon/appel-pro-formation-ou-collaboration-45-min"
+       target="_blank" rel="noopener" style="text-decoration:none; display:block;">
+      <div class="card" style="height:100%; border-left:3px solid var(--gold); cursor:pointer; transition:box-shadow 0.2s, transform 0.2s;"
+           onmouseover="this.style.boxShadow='0 4px 16px rgba(184,134,11,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="font-size:1.5rem; margin-bottom:0.6rem;">🏫</div>
+        <h3>Professeurs — 45 min</h3>
+        <p style="color:#666; font-size:0.86rem; margin-bottom:1rem;">Formation, collaboration pédagogique.</p>
+        <div style="text-align:center; margin:0.5rem 0 0.75rem;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=b8860b&bgcolor=faf7f2&data=https%3A%2F%2Fcalendly.com%2Fdidaskalosmanthanon%2Fappel-pro-formation-ou-collaboration-45-min"
+               alt="QR Professeurs" style="border-radius:2px; border:1px solid var(--mist);">
+        </div>
+        <div style="font-family:'DM Mono',monospace; font-size:0.74rem; color:var(--gold); letter-spacing:0.06em;">Calendly ↗</div>
+      </div>
+    </a>
+
+    <a href="https://calendly.com/didaskalosmanthanon/point-parents-presentation-de-l-outil-15-min"
+       target="_blank" rel="noopener" style="text-decoration:none; display:block;">
+      <div class="card" style="height:100%; border-left:3px solid var(--rust); cursor:pointer; transition:box-shadow 0.2s, transform 0.2s;"
+           onmouseover="this.style.boxShadow='0 4px 16px rgba(192,57,43,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div style="font-size:1.5rem; margin-bottom:0.6rem;">👨‍👩‍👧</div>
+        <h3>Parents — 15 min</h3>
+        <p style="color:#666; font-size:0.86rem; margin-bottom:1rem;">Présentation de l'outil &amp; suivi.</p>
+        <div style="text-align:center; margin:0.5rem 0 0.75rem;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=c0392b&bgcolor=faf7f2&data=https%3A%2F%2Fcalendly.com%2Fdidaskalosmanthanon%2Fpoint-parents-presentation-de-l-outil-15-min"
+               alt="QR Parents" style="border-radius:2px; border:1px solid var(--mist);">
+        </div>
+        <div style="font-family:'DM Mono',monospace; font-size:0.74rem; color:var(--rust); letter-spacing:0.06em;">Calendly ↗</div>
+      </div>
+    </a>
+  </div>
+  <p style="font-size:0.78rem; color:#888; font-family:'DM Mono',monospace; text-align:center; letter-spacing:0.04em;">
+    Scannez le QR code ou cliquez sur la carte pour ouvrir le lien.
+  </p>
+</section>
+
+<footer>Seconde · Statistiques &amp; Probabilités · <a href="https://eduscol.education.gouv.fr/sites/default/files/document/spe631annexe1062957pdf-84144.pdf" target="_blank" rel="noopener noreferrer">Conforme au programme officiel Éduscol</a> — Échantillonnage (p. 14)</footer>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>
